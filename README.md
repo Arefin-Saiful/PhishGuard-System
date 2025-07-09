@@ -59,19 +59,30 @@ pip install -r requirements.txt
 
 ## 📂 Project Structure
 
-```bash
 phishguard/
-├── static/
-├── templates/
+├── models/
+│   └── email/
+│       ├── hybrid_model.h5
+│       └── tokenizer.pkl
+│
+│   └── URL/
+│       ├── Hybrid_CNN_LSTM_best.h5
+│       ├── tokenizer.json
+│       ├── config.json
+│       └── scaler_link_count.pkl
+│
 ├── utils/
 │   ├── email_model.py
-│   ├── url_model.py
-├── models/
-├── app.py
-├── config.py
+│   └── url_model.py
+│
+├── templates/          ← HTML pages
+├── static/             ← CSS, JS
+├── app.py              ← Flask main app
 ├── requirements.txt
+├── Procfile
+├── .env                ← (optional) config vars
 └── README.md
-```
+
 
 ## ⚙️ How It Works
 
