@@ -66,6 +66,11 @@ serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 logging.info("⇢ Using database: %s", app.config["SQLALCHEMY_DATABASE_URI"])
 
+# ────────────────── ensure tables exist (Render fix) ─────────
+with app.app_context():
+    db.create_all()
+    logging.info("✓ Database tables ensured")
+
 # ──────────────────────────── models ─────────────────────────
 class User(UserMixin, db.Model):
     id       = db.Column(db.Integer, primary_key=True)
@@ -105,7 +110,7 @@ def admin_required(fn: Callable):
         return fn(*a, **kw)
     return _wrap
 
-# ───────────────────── password-reset helpers ─────────────────
+# ───────────────────── password-reset helpers ────────────────
 def send_reset_email(to_email: str) -> None:
     token = serializer.dumps(to_email, salt="password-reset")
     link  = url_for("reset_token", token=token, _external=True)
@@ -213,20 +218,20 @@ def api_email():
     if not f or not f.filename.lower().endswith(".eml"):
         return jsonify(error="No .eml file"), 400
 
-    t0      = time.perf_counter()
-    verdict, conf = get_email_predict()(f.read())
-    ms      = int((time.perf_counter() - t0) * 1000)
-    logging.info("E-mail scanned in %d ms → %s  %.3f", ms, verdict, conf)
+    t0          = time.perf_counter()
+    verdict, cf = get_email_predict()(f.read())
+    ms          = int((time.perf_counter() - t0) * 1000)
+    logging.info("E-mail scanned in %d ms → %s  %.3f", ms, verdict, cf)
 
     db.session.add(Prediction(
         user_id    = current_user.id,
         input_type = "email",
         verdict    = verdict,
-        confidence = conf
+        confidence = cf
     ))
     db.session.commit()
 
-    return jsonify(verdict=verdict, confidence=conf), 200
+    return jsonify(verdict=verdict, confidence=cf), 200
 
 @app.post("/api/url")
 @login_required
@@ -237,59 +242,38 @@ def api_url():
         return jsonify(error="URL missing"), 400
 
     # 1) Normalize & ensure scheme
-    if raw_url.lower().startswith(("http://", "https://")):
-        url = raw_url
-    else:
-        url = "https://" + raw_url
+    url = raw_url if raw_url.lower().startswith(("http://", "https://")) else "https://" + raw_url
 
     # 2) Reachability check with browser User-Agent
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     try:
-        resp = requests.head(
-            url,
-            allow_redirects=True,
-            timeout=3,
-            headers=headers
-        )
-        # fallback to GET if Cloudflare blocks HEAD
-        if resp.status_code == 403:
-            resp = requests.get(
-                url,
-                allow_redirects=True,
-                timeout=3,
-                headers=headers,
-                stream=True
-            )
-    except requests.RequestException as e:
+        resp = requests.head(url, allow_redirects=True, timeout=3, headers=headers)
+        if resp.status_code == 403:  # Cloudflare blocks HEAD
+            resp = requests.get(url, allow_redirects=True, timeout=3, headers=headers, stream=True)
+    except requests.RequestException:
         return jsonify(error="Network failure checking URL"), 502
 
-    # 3) ── UPDATED: only fail on 5xx; allow 2xx–4xx (including 403) ─────────
+    # 3) Only fail on 5xx; allow 2xx–4xx
     if resp.status_code >= 500:
-        logging.info("Server‐side error checking URL → HTTP %d", resp.status_code)
-        return (
-            jsonify(
-                error  = "Server error checking URL",
-                status = resp.status_code
-            ),
-            resp.status_code
-        )
+        logging.info("Server-side error checking URL → HTTP %d", resp.status_code)
+        return jsonify(error="Server error checking URL", status=resp.status_code), resp.status_code
 
-    # 4) Only now do the ML scan
-    t0      = time.perf_counter()
-    verdict, conf = get_url_predict()(url)
-    ms      = int((time.perf_counter() - t0) * 1000)
-    logging.info("URL scanned in %d ms → %s  %.3f", ms, verdict, conf)
+    # 4) ML scan
+    t0          = time.perf_counter()
+    verdict, cf = get_url_predict()(url)
+    ms          = int((time.perf_counter() - t0) * 1000)
+    logging.info("URL scanned in %d ms → %s  %.3f", ms, verdict, cf)
 
     # 5) Persist & return
     db.session.add(Prediction(
         user_id    = current_user.id,
         input_type = "url",
         verdict    = verdict,
-        confidence = conf
+        confidence = cf
     ))
     db.session.commit()
 
-    return jsonify(verdict=verdict, confidence=conf), 200
+    return jsonify(verdict=verdict, confidence=cf), 200
 
 @app.get("/api/history/pie")
 @login_required
@@ -308,7 +292,7 @@ def history_daily():
                      .group_by("day", Prediction.verdict).all()
     timeline: dict[str, dict[str, int]] = {}
     for day, v, c in rows:
-        timeline.setdefault(str(day), {"Phishing":0,"Legitimate":0})[v] = int(c)
+        timeline.setdefault(str(day), {"Phishing":0, "Legitimate":0})[v] = int(c)
     return jsonify(timeline)
 
 @app.get("/api/stats")
@@ -316,14 +300,9 @@ def history_daily():
 def global_stats():
     total_scans    = Prediction.query.count()
     emails_scanned = Prediction.query.filter_by(input_type="email").count()
-    malicious_urls = Prediction.query.filter_by(
-        input_type="url", verdict="Phishing"
-    ).count()
+    malicious_urls = Prediction.query.filter_by(input_type="url", verdict="Phishing").count()
 
-    detection_accuracy = (
-        round((total_scans - malicious_urls) / total_scans * 100, 1)
-        if total_scans > 0 else 0.0
-    )
+    detection_accuracy = round((total_scans - malicious_urls) / total_scans * 100, 1) if total_scans else 0.0
 
     return jsonify(
         emails_scanned     = emails_scanned,
@@ -350,9 +329,7 @@ def url_page():
 @app.route("/messages")
 @admin_required
 def messages():
-    msgs = ContactMessage.query.order_by(
-        ContactMessage.timestamp.desc()
-    ).all()
+    msgs = ContactMessage.query.order_by(ContactMessage.timestamp.desc()).all()
     return render_template("messages.html", msgs=msgs)
 
 # ────────────────────────── auth UI ─────────────────────────
@@ -363,8 +340,7 @@ def register():
         if User.query.filter_by(email=email).first():
             flash("Email already registered", "danger")
             return redirect(url_for("register"))
-        user = User(email=email,
-                    pw_hash=generate_password_hash(request.form["password"]))
+        user = User(email=email, pw_hash=generate_password_hash(request.form["password"]))
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -376,8 +352,7 @@ def login():
     if request.method == "POST":
         email = request.form["email"].lower()
         user  = User.query.filter_by(email=email).first()
-        if user and check_password_hash(user.pw_hash,
-                                        request.form["password"]):
+        if user and check_password_hash(user.pw_hash, request.form["password"]):
             login_user(user, remember=bool(request.form.get("remember")))
             return redirect(url_for("dashboard"))
         flash("Invalid credentials", "danger")
@@ -392,6 +367,6 @@ def logout():
 
 # ───────────────────────────── main ─────────────────────────
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()  # create tables on first run
-    app.run(debug=False)  # disable debug in production
+    # tables are already created above; this block only runs when
+    # you execute `python app.py` locally.
+    app.run(debug=False)
