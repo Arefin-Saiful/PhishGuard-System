@@ -93,6 +93,23 @@ with app.app_context():
     db.create_all()
     logging.info("✓ Database tables ensured")
 
+    # ---------- NEW: ensure default admin user --------------------
+    admin_email = "marefin816@gmail.com"
+    admin = User.query.filter_by(email=admin_email).first()
+    if not admin:
+        admin = User(
+            email   = admin_email,
+            pw_hash = generate_password_hash("ChangeMe123!"),  # change after first login
+            is_admin=True
+        )
+        db.session.add(admin)
+        db.session.commit()
+        logging.info("✓ Default admin user created: %s", admin_email)
+    elif not admin.is_admin:
+        admin.is_admin = True
+        db.session.commit()
+        logging.info("✓ Existing user promoted to admin: %s", admin_email)
+
 # ───────────────────── authentication helpers ────────────────
 login_manager = LoginManager(app)
 login_manager.login_view    = "login"
