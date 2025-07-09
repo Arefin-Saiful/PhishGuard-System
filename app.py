@@ -66,11 +66,6 @@ serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 logging.info("⇢ Using database: %s", app.config["SQLALCHEMY_DATABASE_URI"])
 
-# ────────────────── ensure tables exist (Render fix) ─────────
-with app.app_context():
-    db.create_all()
-    logging.info("✓ Database tables ensured")
-
 # ──────────────────────────── models ─────────────────────────
 class User(UserMixin, db.Model):
     id       = db.Column(db.Integer, primary_key=True)
@@ -93,6 +88,11 @@ class ContactMessage(db.Model):
     body      = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
+# ─────────── ensure tables **after** models are defined ──────
+with app.app_context():
+    db.create_all()
+    logging.info("✓ Database tables ensured")
+
 # ───────────────────── authentication helpers ────────────────
 login_manager = LoginManager(app)
 login_manager.login_view    = "login"
@@ -110,7 +110,7 @@ def admin_required(fn: Callable):
         return fn(*a, **kw)
     return _wrap
 
-# ───────────────────── password-reset helpers ────────────────
+# ───────────────────── password-reset helpers ───────────────
 def send_reset_email(to_email: str) -> None:
     token = serializer.dumps(to_email, salt="password-reset")
     link  = url_for("reset_token", token=token, _external=True)
@@ -136,7 +136,7 @@ def verify_reset_token(token: str, exp: int = 1800) -> str | None:
     except Exception:
         return None
 
-# ─────────────────────────── public views ────────────────────
+# ─────────────────────────── public views ───────────────────
 @app.route("/")
 def root():
     return redirect(url_for("home"))
@@ -241,30 +241,24 @@ def api_url():
     if not raw_url:
         return jsonify(error="URL missing"), 400
 
-    # 1) Normalize & ensure scheme
     url = raw_url if raw_url.lower().startswith(("http://", "https://")) else "https://" + raw_url
-
-    # 2) Reachability check with browser User-Agent
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     try:
         resp = requests.head(url, allow_redirects=True, timeout=3, headers=headers)
-        if resp.status_code == 403:  # Cloudflare blocks HEAD
+        if resp.status_code == 403:
             resp = requests.get(url, allow_redirects=True, timeout=3, headers=headers, stream=True)
     except requests.RequestException:
         return jsonify(error="Network failure checking URL"), 502
 
-    # 3) Only fail on 5xx; allow 2xx–4xx
     if resp.status_code >= 500:
         logging.info("Server-side error checking URL → HTTP %d", resp.status_code)
         return jsonify(error="Server error checking URL", status=resp.status_code), resp.status_code
 
-    # 4) ML scan
     t0          = time.perf_counter()
     verdict, cf = get_url_predict()(url)
     ms          = int((time.perf_counter() - t0) * 1000)
     logging.info("URL scanned in %d ms → %s  %.3f", ms, verdict, cf)
 
-    # 5) Persist & return
     db.session.add(Prediction(
         user_id    = current_user.id,
         input_type = "url",
@@ -292,7 +286,7 @@ def history_daily():
                      .group_by("day", Prediction.verdict).all()
     timeline: dict[str, dict[str, int]] = {}
     for day, v, c in rows:
-        timeline.setdefault(str(day), {"Phishing":0, "Legitimate":0})[v] = int(c)
+        timeline.setdefault(str(day), {"Phishing": 0, "Legitimate": 0})[v] = int(c)
     return jsonify(timeline)
 
 @app.get("/api/stats")
@@ -303,7 +297,6 @@ def global_stats():
     malicious_urls = Prediction.query.filter_by(input_type="url", verdict="Phishing").count()
 
     detection_accuracy = round((total_scans - malicious_urls) / total_scans * 100, 1) if total_scans else 0.0
-
     return jsonify(
         emails_scanned     = emails_scanned,
         malicious_urls     = malicious_urls,
@@ -367,6 +360,5 @@ def logout():
 
 # ───────────────────────────── main ─────────────────────────
 if __name__ == "__main__":
-    # tables are already created above; this block only runs when
-    # you execute `python app.py` locally.
+    # tables are already created above; this runs only for local dev
     app.run(debug=False)
