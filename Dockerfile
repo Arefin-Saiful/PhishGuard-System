@@ -1,22 +1,23 @@
 # ---------- base image ----------
 FROM python:3.11-slim
 
-# (optional) system build tools for numpy / scipy wheels
-RUN apt-get update && apt-get install -y build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# (optional) native build tools for NumPy / SciPy wheels
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # ---------- working directory ----------
 WORKDIR /app
 
-# ---------- install Python dependencies ----------
+# ---------- Python deps ----------
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# ---------- copy project source ----------
+# ---------- project source ----------
 COPY . .
 
-# Render sets PORT at runtime; expose as env var
-ENV PORT=10000
-
 # ---------- launch ----------
-CMD ["gunicorn", "-b", "0.0.0.0:${PORT}", "app:app"]
+# Render sets $PORT at runtime; provide 10000 as a local fallback
+CMD sh -c 'gunicorn -b 0.0.0.0:${PORT:-10000} app:app'
