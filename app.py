@@ -394,4 +394,4 @@ def logout():
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # create tables on first run
-    app.run(debug=True)  # disable debug in production
+    app.run(debug=False)  # disable debug in production
