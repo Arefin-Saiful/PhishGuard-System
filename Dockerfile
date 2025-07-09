@@ -18,6 +18,12 @@ RUN pip install --no-cache-dir --upgrade pip \
 # ---------- project source ----------
 COPY . .
 
+# ---------- Gunicorn settings ----------
+# • 1 worker keeps memory lowest (you can raise if your plan has more RAM)
+# • 4 threads give a bit of concurrency
+# • 120-second timeout lets the TensorFlow model finish loading on cold start
+ENV GUNICORN_CMD_ARGS="--workers 1 --threads 4 --timeout 120"
+
 # ---------- launch ----------
-# Render sets $PORT at runtime; provide 10000 as a local fallback
-CMD sh -c 'gunicorn -b 0.0.0.0:${PORT:-10000} app:app'
+# Render injects $PORT at runtime; use 10000 when running locally.
+CMD ["gunicorn", "-b", "0.0.0.0:${PORT:-10000}", "app:app"]
