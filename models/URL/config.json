@@ -1,0 +1,7 @@
+{
+  "max_seq_len": 200,
+  "label_mapping": {
+    "legitimate": 0,
+    "phishing": 1
+  }
+}

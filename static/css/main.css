@@ -1,0 +1,39 @@
+/* ─────────────────────────────────────────────
+   main.css – custom look & feel
+──────────────────────────────────────────────*/
+
+/* 1. Base style for the large outline buttons */
+.btn-outline-primary{
+  border-radius:12px;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+
+/* 2. Extra lift + glow for dashboard cards */
+.dash-card:hover{
+  transform:translateY(-4px);
+  box-shadow:
+     0 .75rem 1.5rem rgba(0,0,0,.2),    /* soft shadow */
+     0 0 8px rgba(13,110,253,.6);       /* blue glow */
+}
+
+/* 3. Smooth fade-up for any AOS element that lacks opacity tween */
+[data-aos]{
+  opacity:0;
+  transition-property:opacity,transform;
+}
+[data-aos].aos-animate{
+  opacity:1;
+}
+
+/* 4. Gauge canvas spacing (single-scan pages)  ▸ updated selector */
+#urlGauge{
+  max-width:160px;
+  margin-top:1rem;
+}
+
+/* 5. Utility: small rounded alert buttons inside tables */
+.table-btn{
+  padding:.25rem .5rem;
+  font-size:.75rem;
+  border-radius:.5rem;
+}

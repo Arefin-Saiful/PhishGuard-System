@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 680px;">
+
+  <h2 class="mb-4 text-center" data-aos="fade-down">Contact&nbsp;Us</h2>
+
+  <form method="POST"
+        class="card p-4 border-0 shadow-sm"
+        data-aos="fade-up"
+        data-aos-delay="150">
+    <div class="mb-3" data-aos="fade-right" data-aos-delay="200">
+      <label for="name" class="form-label fw-bold">Name</label>
+      <input id="name"
+             name="name"
+             type="text"
+             class="form-control"
+             placeholder="Your name"
+             required>
+    </div>
+
+    <div class="mb-3" data-aos="fade-right" data-aos-delay="300">
+      <label for="email" class="form-label fw-bold">Email</label>
+      <input id="email"
+             name="email"
+             type="email"
+             class="form-control"
+             placeholder="you@example.com"
+             required>
+    </div>
+
+    <div class="mb-3" data-aos="fade-right" data-aos-delay="400">
+      <label for="message" class="form-label fw-bold">Message</label>
+      <textarea id="message"
+                name="message"
+                rows="4"
+                class="form-control"
+                placeholder="How can we help?"
+                required></textarea>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary w-100"
+            data-aos="zoom-in"
+            data-aos-delay="500">
+      Send&nbsp;Message
+    </button>
+  </form>
+</div>
+{% endblock %}

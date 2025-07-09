@@ -1,0 +1,77 @@
+{# templates/home.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ────────── hero background (unchanged) ────────── -->
+<style>
+  .hero {
+    position: relative;
+    color: #fff;
+    background: url('{{ url_for("static", filename="img/hero-bg.png") }}') center/cover fixed;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: rgba(0,98,255,.65);
+    backdrop-filter: blur(2px);
+    z-index: -1;
+  }
+</style>
+
+<header class="hero py-5 text-center" data-aos="fade-up">
+  <h1 class="display-5 fw-bold">Stop Phishing in Its Tracks</h1>
+  <p class="lead">Upload suspicious e-mails or URLs and get an instant verdict.</p>
+
+  {# show CTA only when the visitor is NOT logged-in #}
+  {% if not current_user.is_authenticated %}
+    <a href="{{ url_for('register') }}"
+       class="btn btn-primary btn-lg mt-3">
+      Get&nbsp;Started
+    </a>
+  {% endif %}
+</header>
+
+<!-- ────────── live counters (Accuracy removed) ────────── -->
+<section class="container py-5">
+  <div class="row g-4 text-center">
+
+    <div class="col" data-aos="fade-up">
+      <h2>
+        <span id="cntEmails" class="display-6 fw-bold">0</span><span class="display-6">+</span>
+      </h2>
+      <p class="fw-bold mb-0">Emails&nbsp;Scanned</p>
+    </div>
+
+    <div class="col" data-aos="fade-up" data-aos-delay="150">
+      <h2>
+        <span id="cntUrls" class="display-6 fw-bold">0</span><span class="display-6">+</span>
+      </h2>
+      <p class="fw-bold mb-0">Malicious&nbsp;URLs&nbsp;Flagged</p>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<!-- PureCounter (smooth count-up) -->
+<script src="https://cdn.jsdelivr.net/npm/purecounterjs@1.5.0/dist/purecounter_vanilla.js"></script>
+
+<!-- Fetch live stats & feed the two counters -->
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/stats");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { emails_scanned, malicious_urls } = await res.json();
+
+    // PureCounter animates when innerText changes
+    document.getElementById("cntEmails").innerText = emails_scanned ?? 0;
+    document.getElementById("cntUrls"  ).innerText = malicious_urls ?? 0;
+  } catch (err) {
+    console.error("Stats fetch failed:", err);
+    // zeros will remain on error
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+  <h3 class="mb-4">Scan History</h3>
+
+  <div class="row g-4">
+    <!-- Scans per Day Line Chart -->
+    <div class="col-md-8">
+      <h5 class="mb-3">Scans per Day</h5>
+      <canvas id="lineChart" height="120"></canvas>
+    </div>
+
+    <!-- Overall Verdicts Pie Chart -->
+    <div class="col-md-4">
+      <h5 class="mb-3">Overall Verdicts</h5>
+      <canvas id="pieChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Detailed History Table -->
+  <div class="mt-5">
+    <h5 class="mb-3">Detailed History</h5>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date/Time</th>
+          <th>Type</th>
+          <th>Verdict</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody">
+        <!-- JS will populate rows here -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- History page script -->
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

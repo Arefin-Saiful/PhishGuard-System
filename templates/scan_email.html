@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5" style="max-width:640px;" data-aos="fade-right">
+
+  <!-- heading -->
+  <h3 class="mb-4">E-mail&nbsp;Phishing&nbsp;Scanner</h3>
+
+  <!-- file picker -->
+  <label for="emlInput" class="form-label fw-bold">
+    Choose an&nbsp;<code>.eml</code>&nbsp;file
+  </label>
+  <input id="emlInput"
+         class="form-control"
+         type="file"
+         accept=".eml">
+
+  <!-- scan button -->
+  <button id="scanEmailBtn"
+          class="btn btn-primary mt-3"
+          disabled>
+    <!-- busy spinner (hidden by default) -->
+    <span id="emailBusy"
+          class="spinner-border spinner-border-sm me-2 d-none"
+          role="status"></span>
+    <i class="bi bi-search me-1"></i> Scan
+  </button>
+
+  <!-- result card -->
+  <div id="emailResult"
+       class="card border-0 shadow-sm mt-4 d-none"
+       data-aos="zoom-in">
+    <div class="card-body text-center">
+
+      <!-- verdict text -->
+      <h5 id="verdictText" class="card-title"></h5>
+
+      <!-- confidence gauge -->
+      <canvas id="gaugeCanvas"
+              width="150"
+              height="150"
+              class="my-3"></canvas>
+
+      <!-- why-flagged section (shown only on phishing) -->
+      <div id="whyBox" class="d-none">
+        <h6 class="fw-bold mb-2">Why it was flagged</h6>
+        <ul id="tokenList" class="list-unstyled small mb-0"></ul>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/email.js') }}"></script>
+{% endblock %}

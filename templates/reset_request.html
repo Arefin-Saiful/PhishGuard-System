@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:480px;">
+  <h3 class="mb-4">Reset Your Password</h3>
+  <form method="post">
+    <div class="mb-3">
+      <label for="email" class="form-label">Email address</label>
+      <input type="email" class="form-control" id="email" name="email"
+             placeholder="your@example.com" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Send Reset Link</button>
+    <a href="{{ url_for('login') }}" class="btn btn-link">Cancel</a>
+  </form>
+</div>
+{% endblock %}

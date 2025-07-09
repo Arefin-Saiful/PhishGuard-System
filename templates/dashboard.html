@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- heading -->
+  <h2 class="mb-4 text-center" data-aos="fade-up">Dashboard</h2>
+
+  <!-- cards -->
+  <div class="row g-4">
+
+    <!-- Email Scanner -->
+    <div class="col-md-4" data-aos="zoom-in">
+      <a href="{{ url_for('email_page') }}"
+         class="btn btn-outline-primary w-100 p-5 dash-card d-flex
+                flex-column align-items-center justify-content-center">
+        <i class="bi bi-envelope fs-1 mb-3"></i>
+        <span class="fs-5">Email&nbsp;Scanner</span>
+      </a>
+    </div>
+
+    <!-- URL Scanner -->
+    <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
+      <a href="{{ url_for('url_page') }}"
+         class="btn btn-outline-primary w-100 p-5 dash-card d-flex
+                flex-column align-items-center justify-content-center">
+        <i class="bi bi-link-45deg fs-1 mb-3"></i>
+        <span class="fs-5">URL&nbsp;Scanner</span>
+      </a>
+    </div>
+
+    <!-- Inbox (contact messages) – admin only -->
+    {% if current_user.is_admin %}
+    <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
+      <a href="{{ url_for('messages') }}"
+         class="btn btn-outline-primary w-100 p-5 dash-card d-flex
+                flex-column align-items-center justify-content-center">
+        <i class="bi bi-chat-left-text fs-1 mb-3"></i>
+        <span class="fs-5">Inbox&nbsp;(Contact)</span>
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

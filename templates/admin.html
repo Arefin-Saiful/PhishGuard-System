@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:720px;" data-aos="fade-up">
+
+  <h2 class="mb-4 text-center">Admin&nbsp;Panel</h2>
+
+  <!-- mini stats -->
+  <div class="row text-center g-4">
+    <div class="col"><h4>{{ user_count }}</h4><p class="mb-0">Users</p></div>
+    <div class="col"><h4>{{ scan_count }}</h4><p class="mb-0">Scans</p></div>
+    <div class="col"><h4>{{ msg_count }}</h4><p class="mb-0">Messages</p></div>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-grid gap-3">
+    <a href="{{ url_for('messages') }}" class="btn btn-outline-primary">
+      <i class="bi bi-chat-left-text me-1"></i> Open Inbox
+    </a>
+  </div>
+
+</div>
+{% endblock %}

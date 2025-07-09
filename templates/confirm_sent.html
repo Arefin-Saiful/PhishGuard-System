@@ -1,0 +1,19 @@
+{# templates/confirm_sent.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center py-5" style="min-height: 80vh;">
+  <div class="card p-4 border-0 shadow-sm w-100" style="max-width: 480px;" data-aos="fade-down">
+    <h4 class="mb-3 text-center">Check Your Inbox</h4>
+    <p class="text-center mb-4">
+      If an account exists for the email you provided, you’ll shortly receive<br>
+      a link to reset your password. Be sure to check your spam folder if it doesn’t arrive.
+    </p>
+    <div class="text-center">
+      <a href="{{ url_for('login') }}" class="btn btn-primary">
+        Return to Login
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

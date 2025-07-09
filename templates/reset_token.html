@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:480px;">
+  <h3 class="mb-4">Set New Password</h3>
+  <form method="post">
+    <div class="mb-3">
+      <label for="password" class="form-label">New Password</label>
+      <input type="password" class="form-control" id="password" name="password"
+             required minlength="6">
+    </div>
+    <button type="submit" class="btn btn-success">Reset Password</button>
+    <a href="{{ url_for('login') }}" class="btn btn-link">Back to Log in</a>
+  </form>
+</div>
+{% endblock %}
