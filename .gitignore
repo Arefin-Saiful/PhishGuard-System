@@ -13,13 +13,10 @@ models/email/*
 # Bytecode and cache
 __pycache__/
 *.py[cod]
-*.pkl
-*.h5
-*.joblib
 
 # Virtual environments
 venv/
-.env/
+.env
 
 # Ignore IDE/editor config files
 *.log
