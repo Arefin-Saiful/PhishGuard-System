@@ -1,0 +1,37 @@
+# Ignore all model files in models/URL except the one in use
+models/URL/*
+!models/URL/Hybrid_CNN_LSTM_best.h5
+!models/URL/tokenizer.json
+!models/URL/config.json
+!models/URL/scaler_link_count.pkl
+
+# Ignore all model files in models/email except the one in use
+models/email/*
+!models/email/hybrid_model.h5
+!models/email/tokenizer.pkl
+
+# Bytecode and cache
+__pycache__/
+*.py[cod]
+*.pkl
+*.h5
+*.joblib
+
+# Virtual environments
+venv/
+.env/
+
+# Ignore IDE/editor config files
+*.log
+*.swp
+*.swo
+.DS_Store
+.vscode/
+.idea/
+
+# Heroku/Flask/Build
+*.sqlite3
+*.db
+instance/
+*.bak
+*.tmp
