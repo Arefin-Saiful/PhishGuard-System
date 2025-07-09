@@ -26,4 +26,4 @@ ENV GUNICORN_CMD_ARGS="--workers 1 --threads 4 --timeout 120"
 
 # ---------- launch ----------
 # Render injects $PORT at runtime; use 10000 when running locally.
-CMD ["gunicorn", "-b", "0.0.0.0:${PORT:-10000}", "app:app"]
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-10000} app:app"]
