@@ -152,6 +152,16 @@ def verify_reset_token(token: str, exp: int = 1800) -> str | None:
         return serializer.loads(token, salt="password-reset", max_age=exp)
     except Exception:
         return None
+# ─── near your other small utility routes ───────────────────
+from flask import send_from_directory
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static", "img"),
+        "favicon.png",           # <-- the file you already committed
+        mimetype="image/png"
+    )
 
 # ─────────────────────────── public views ───────────────────
 @app.route("/")
